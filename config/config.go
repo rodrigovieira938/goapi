@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -29,7 +29,7 @@ type DatabaseConfig struct {
 func New() *Config {
 	var c Config
 	if err := envdecode.StrictDecode(&c); err != nil {
-		log.Fatalf("Failed to decode: %s", err)
+		slog.Error("Failed to decode", "err", err)
 	}
 	return &c
 }
