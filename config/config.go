@@ -24,6 +24,7 @@ type DatabaseConfig struct {
 	Port     int    `env:"DB_PORT,default=5432"`
 	User     string `env:"DB_USER,default=postgres"`
 	Password string `env:"DB_PASSWORD,default=password"`
+	Database string `env:"DB_NAME,default=carleaser"`
 }
 
 func New() *Config {

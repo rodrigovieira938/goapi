@@ -9,6 +9,7 @@ import (
 	"github.com/rodrigovieira938/goapi/api/router"
 	"github.com/rodrigovieira938/goapi/config"
 	"github.com/rodrigovieira938/goapi/util"
+	"github.com/rodrigovieira938/goapi/util/db"
 	"github.com/rodrigovieira938/goapi/util/logger"
 )
 
@@ -26,14 +27,20 @@ func main() {
 	} else {
 		config.DebugPrint(cfg)
 	}
+	slog.Info("Connecting to database...")
+	dbconn, err := db.Connect(cfg.Database)
+	if err != nil {
+		slog.Error("Error connecting to database:", "err", err)
+		return
+	}
 	slog.Info("Starting server...")
-	http.Handle("/", router.New())
+	http.Handle("/", router.New(dbconn))
 	port := cfg.Server.Port
 	if port == 0 {
 		port = util.FindUsablePort(8080)
 	}
 	slog.Info(fmt.Sprintf("Server started at http://%s:%d", cfg.Server.Hostname, port))
-	err := http.ListenAndServe(fmt.Sprintf("%s:%d", cfg.Server.Hostname, port), nil)
+	err = http.ListenAndServe(fmt.Sprintf("%s:%d", cfg.Server.Hostname, port), nil)
 	if err != nil {
 		slog.Error("Error starting server:", "err", err)
 	}
