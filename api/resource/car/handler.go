@@ -29,7 +29,7 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var cars []Car
+	var cars []Car = make([]Car, 0)
 
 	for rows.Next() {
 		var car Car
