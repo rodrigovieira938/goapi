@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rodrigovieira938/goapi/api/resource/cars"
+	"github.com/rodrigovieira938/goapi/api/resource/users"
 	"github.com/rodrigovieira938/goapi/api/router/middleware"
 )
 
@@ -19,6 +20,10 @@ func New(db *sql.DB) *mux.Router {
 	carAPI := cars.New(db)
 	r.HandleFunc("/cars", carAPI.Get).Methods("GET")
 	r.HandleFunc("/cars", carAPI.Post).Methods("POST")
+
+	userAPI := users.New(db)
+	r.HandleFunc("/users", userAPI.Get).Methods("GET")
+	r.HandleFunc("/users", userAPI.Post).Methods("POST")
 
 	return r
 }
