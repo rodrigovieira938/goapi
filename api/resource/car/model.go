@@ -1,14 +1,14 @@
 package car
 
 type Car struct {
-	ID           int     `json:"id"`
-	Model        string  `json:"model"`
-	Brand        string  `json:"brand"`
-	Year         int     `json:"year"`
-	Color        string  `json:"color"`
-	Doors        int     `json:"doors"`
-	PricePerDay  float64 `json:"price_per_day"`
-	LicensePlate string  `json:"license_plate"`
+	ID           int     `json:"id" validate:"gte=1"`
+	Model        string  `json:"model" validate:"required"`
+	Brand        string  `json:"brand" validate:"required"`
+	Year         int     `json:"year" validate:"required"`
+	Color        string  `json:"color" validate:"iscolor"`
+	Doors        int     `json:"doors" validate:"required"`
+	PricePerDay  float64 `json:"price_per_day" validate:"gt=0"`
+	LicensePlate string  `json:"license_plate" validate:"required"`
 	// Stored in liters
-	BaggageVolume float64 `json:"baggage_volume"`
+	BaggageVolume float64 `json:"baggage_volume" validate:"required"`
 }

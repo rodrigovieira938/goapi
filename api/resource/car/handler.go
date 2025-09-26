@@ -3,8 +3,10 @@ package car
 import (
 	"database/sql"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/rodrigovieira938/goapi/util"
 )
 
@@ -53,6 +55,16 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		util.JsonError(w, "{\"error\":\"Invalid JSON! Check if json is valid or if all required fields are present\"}", http.StatusBadRequest)
 		return
 	}
+	car.ID = 1 // Make id valid since its ignored
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	err = validate.Struct(car)
+	if err != nil {
+		validationErrors := err.(validator.ValidationErrors)
+		if validationErrors != nil {
+			util.JsonError(w, "{\"error\":\""+validationErrors.Error()+"\"}", http.StatusBadRequest)
+			return
+		}
+	}
 	row := api.db.QueryRow(
 		`INSERT INTO car (model, brand, year, color, doors, price_per_day, license_plate, baggage_volume) 
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -60,6 +72,8 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		car.Model, car.Brand, car.Year, car.Color, car.Doors, car.PricePerDay, car.LicensePlate, car.BaggageVolume)
 	err = row.Scan(&car.ID)
 	if err != nil {
+		//TODO: check for unique license plate violation
+		slog.Error("Error inserting car", "error", err)
 		util.JsonError(w, "{\"error\":\"Internal Server Error\"}", http.StatusInternalServerError)
 		return
 	}
