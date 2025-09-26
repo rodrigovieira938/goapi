@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS lease (
+CREATE TABLE IF NOT EXISTS reservation (
     id         SERIAL PRIMARY KEY,
     user_id    INT NOT NULL,
     car_id     INT NOT NULL,
