@@ -1,4 +1,4 @@
-package car
+package cars
 
 type Car struct {
 	ID           int     `json:"id" validate:"gte=1"`

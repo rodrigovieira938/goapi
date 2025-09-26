@@ -1,4 +1,4 @@
-package car
+package cars
 
 import (
 	"database/sql"

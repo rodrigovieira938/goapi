@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/rodrigovieira938/goapi/api/resource/car"
+	"github.com/rodrigovieira938/goapi/api/resource/cars"
 	"github.com/rodrigovieira938/goapi/api/router/middleware"
 )
 
@@ -16,9 +16,9 @@ func New(db *sql.DB) *mux.Router {
 		fmt.Fprintf(w, "Hello, World!")
 	})
 	r.Use(middleware.JsonResponse)
-	carAPI := car.New(db)
-	r.HandleFunc("/car", carAPI.Get).Methods("GET")
-	r.HandleFunc("/car", carAPI.Post).Methods("POST")
+	carAPI := cars.New(db)
+	r.HandleFunc("/cars", carAPI.Get).Methods("GET")
+	r.HandleFunc("/cars", carAPI.Post).Methods("POST")
 
 	return r
 }
