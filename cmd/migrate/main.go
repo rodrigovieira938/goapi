@@ -43,8 +43,30 @@ func migrate_up() {
 	}
 }
 func migrate_down() {
-	//TODO: implement
 	fmt.Println("Migrating down...")
+	cfg := config.New()
+	conn, err := db.Connect(cfg.Database)
+	if err != nil {
+		log.Fatal("Error connecting to database:", err)
+	}
+	defer conn.Close()
+
+	entries, err := os.ReadDir("./migrations/down")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, e := range entries {
+		content, err := os.ReadFile("./migrations/down/" + e.Name())
+		if err != nil {
+			log.Fatal("Failed to read migration file "+e.Name()+":", err)
+		}
+		str := string(content)
+		_, err = conn.Exec(str)
+		if err != nil {
+			log.Fatal("Failed to execute migration "+e.Name()+":", err)
+		}
+	}
 }
 
 func main() {
