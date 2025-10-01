@@ -13,6 +13,7 @@ import (
 type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
+	Auth     AuthConfig
 }
 type ServerConfig struct {
 	Hostname string `env:"SERVER_HOSTNAME,default=localhost"`
@@ -25,6 +26,9 @@ type DatabaseConfig struct {
 	User     string `env:"DB_USER,default=postgres"`
 	Password string `env:"DB_PASSWORD,default=password"`
 	Database string `env:"DB_NAME,default=carleaser"`
+}
+type AuthConfig struct {
+	Secret string `env:"AUTH_SECRET,default=SECRET"`
 }
 
 func New() *Config {
@@ -60,4 +64,6 @@ func DebugPrint(c *Config) {
 	fmt.Printf("\t\tPort=%d\n", c.Database.Port)
 	fmt.Printf("\t\tUser=%s\n", c.Database.User)
 	fmt.Printf("\t\tPassword=%s\n", strings.Repeat("*", len(c.Database.Password)))
+	fmt.Println("\tAuth Configuration:")
+	fmt.Printf("\t\tPassword=%s\n", strings.Repeat("*", len(c.Auth.Secret)))
 }

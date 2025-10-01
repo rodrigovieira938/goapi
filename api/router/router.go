@@ -11,9 +11,10 @@ import (
 	"github.com/rodrigovieira938/goapi/api/resource/reservations"
 	"github.com/rodrigovieira938/goapi/api/resource/users"
 	"github.com/rodrigovieira938/goapi/api/router/middleware"
+	"github.com/rodrigovieira938/goapi/config"
 )
 
-func New(db *sql.DB) *mux.Router {
+func New(db *sql.DB, cfg *config.Config) *mux.Router {
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, World!")
@@ -31,7 +32,7 @@ func New(db *sql.DB) *mux.Router {
 	r.HandleFunc("/reservations", reservationAPI.Get).Methods("GET")
 	r.HandleFunc("/reservations", reservationAPI.Post).Methods("POST")
 
-	authAPI := auth.New(db)
+	authAPI := auth.New(db, &cfg.Auth)
 	r.HandleFunc("/auth/login", authAPI.Login).Methods("POST")
 	r.HandleFunc("/auth/refresh", authAPI.Refresh).Methods("POST")
 

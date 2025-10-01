@@ -34,7 +34,7 @@ func main() {
 		return
 	}
 	slog.Info("Starting server...")
-	http.Handle("/", router.New(dbconn))
+	http.Handle("/", router.New(dbconn, cfg))
 	port := cfg.Server.Port
 	if port == 0 {
 		port = util.FindUsablePort(8080)
