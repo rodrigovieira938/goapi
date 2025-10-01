@@ -19,22 +19,26 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hello, World!")
 	})
+
+	authMiddleware := middleware.NewAuthMiddleware(&cfg.Auth)
+
 	r.Use(middleware.JsonResponse)
 	carAPI := cars.New(db)
 	r.HandleFunc("/cars", carAPI.Get).Methods("GET")
-	r.HandleFunc("/cars", carAPI.Post).Methods("POST")
+	r.Handle("/cars", authMiddleware.WithPerms(http.HandlerFunc(carAPI.Get), []string{"write:cars"})).Methods("POST")
 
 	userAPI := users.New(db)
-	r.HandleFunc("/users", userAPI.Get).Methods("GET")
-	r.HandleFunc("/users", userAPI.Post).Methods("POST")
+	r.Handle("/users", authMiddleware.WithPerms(http.HandlerFunc(userAPI.Get), []string{"read:users"})).Methods("GET")
+	r.Handle("/users", authMiddleware.Reject(http.HandlerFunc(userAPI.Post))).Methods("POST")
 
 	reservationAPI := reservations.New(db)
-	r.HandleFunc("/reservations", reservationAPI.Get).Methods("GET")
-	r.HandleFunc("/reservations", reservationAPI.Post).Methods("POST")
+
+	//If user has perm read:reservations it reads reservations from all users instead of /users/me
+	r.Handle("/reservations", authMiddleware.Require(http.HandlerFunc(reservationAPI.Get))).Methods("GET")
+	r.Handle("/reservations", authMiddleware.Require(http.HandlerFunc(reservationAPI.Post))).Methods("POST")
 
 	authAPI := auth.New(db, &cfg.Auth)
 	r.HandleFunc("/auth/login", authAPI.Login).Methods("POST")
-	r.HandleFunc("/auth/refresh", authAPI.Refresh).Methods("POST")
-
+	r.Handle("/auth/refresh", authMiddleware.Require(http.HandlerFunc(authAPI.Refresh))).Methods("POST")
 	return r
 }
