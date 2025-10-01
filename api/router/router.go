@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rodrigovieira938/goapi/api/resource/auth"
 	"github.com/rodrigovieira938/goapi/api/resource/cars"
 	"github.com/rodrigovieira938/goapi/api/resource/reservations"
 	"github.com/rodrigovieira938/goapi/api/resource/users"
@@ -29,6 +30,10 @@ func New(db *sql.DB) *mux.Router {
 	reservationAPI := reservations.New(db)
 	r.HandleFunc("/reservations", reservationAPI.Get).Methods("GET")
 	r.HandleFunc("/reservations", reservationAPI.Post).Methods("POST")
+
+	authAPI := auth.New(db)
+	r.HandleFunc("/auth/login", authAPI.Login).Methods("POST")
+	r.HandleFunc("/auth/refresh", authAPI.Refresh).Methods("POST")
 
 	return r
 }
