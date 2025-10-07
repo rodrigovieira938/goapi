@@ -3,6 +3,7 @@ package middleware
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -47,10 +48,11 @@ func (auth *AuthMiddleware) GetIDFromToken(token *jwt.Token) (int, error) {
 	var exists int
 	err := auth.db.QueryRow(`
         SELECT CASE WHEN EXISTS (
-            SELECT 1 FROM users WHERE id = $1
+            SELECT 1 FROM "user" WHERE id = $1
         ) THEN 1 ELSE 0 END
     `, id).Scan(&exists)
 	if err != nil {
+		fmt.Println(err)
 		// If there's an error, treat as "not exists"
 		return 0, errors.New("invalid token")
 	}
