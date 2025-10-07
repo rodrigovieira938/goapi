@@ -46,10 +46,10 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 	//Get reservations: if reservations is owned by user return; else demand read:perms
 	r.Handle("/reservations/{id}", authMiddleware.Require(http.HandlerFunc(reservationAPI.Id))).Methods("GET")
 	//Need write:perms
-	r.Handle("/reservations", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Post), []string{"write:perms"})).Methods("POST")
-	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Put), []string{"write:perms"})).Methods("PUT")
-	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Patch), []string{"write:perms"})).Methods("PATCH")
-	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Delete), []string{"write:perms"})).Methods("DELETE")
+	r.Handle("/reservations", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Post), []string{"write:reservations"})).Methods("POST")
+	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Put), []string{"write:reservations"})).Methods("PUT")
+	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Patch), []string{"write:reservations"})).Methods("PATCH")
+	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Delete), []string{"write:reservations"})).Methods("DELETE")
 
 	authAPI := auth.New(db, &cfg.Auth)
 	r.HandleFunc("/auth/login", authAPI.Login).Methods("POST")
