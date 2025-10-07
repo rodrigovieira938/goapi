@@ -60,6 +60,23 @@ func (auth *AuthMiddleware) validToken(tokenStr string) error {
 	}
 	return nil
 }
+func (auth *AuthMiddleware) UserHasPerm(id int, perm string) bool {
+	query := `
+		SELECT CASE WHEN EXISTS (
+			SELECT 1
+			FROM user_permission up
+			JOIN permission p ON up.permission_id = p.id
+			WHERE up.user_id = $1 AND p.name = $2
+		) THEN 1 ELSE 0 END;
+	`
+	var hasPerm int
+	err := auth.db.QueryRow(query, id, perm).Scan(&hasPerm)
+	if err != nil {
+		return false
+	}
+
+	return hasPerm == 1
+}
 func (auth *AuthMiddleware) WithPerms(next http.Handler, perms []string) http.Handler {
 	return auth.Require(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -35,11 +35,14 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 	r.Handle("/users", authMiddleware.WithPerms(http.HandlerFunc(userAPI.Get), []string{"read:users"})).Methods("GET")
 	r.Handle("/users/{id}", authMiddleware.WithPerms(http.HandlerFunc(userAPI.Id), []string{"read:users"})).Methods("GET")
 
-	reservationAPI := reservations.New(db)
+	reservationAPI := reservations.New(db, &cfg.Auth)
 
-	//If user has perm read:reservations it reads reservations from all users instead of /users/me
+	//Get reservations of /users/me
 	r.Handle("/reservations", authMiddleware.Require(http.HandlerFunc(reservationAPI.Get))).Methods("GET")
-	r.Handle("/reservations", authMiddleware.Require(http.HandlerFunc(reservationAPI.Post))).Methods("POST")
+	//Get reservations: if reservations is owned by user return; else demand read:perms
+	r.Handle("/reservations/{id}", authMiddleware.Require(http.HandlerFunc(reservationAPI.Id)))
+	//Need write:perms
+	r.Handle("/reservations", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Post), []string{"write:perms"})).Methods("POST")
 
 	authAPI := auth.New(db, &cfg.Auth)
 	r.HandleFunc("/auth/login", authAPI.Login).Methods("POST")

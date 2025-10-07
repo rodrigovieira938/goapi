@@ -7,20 +7,24 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/mux"
+	"github.com/rodrigovieira938/goapi/api/router/middleware"
+	"github.com/rodrigovieira938/goapi/config"
 	"github.com/rodrigovieira938/goapi/util"
 	timeformat "github.com/rodrigovieira938/goapi/util/time_format"
 )
 
 type API struct {
 	db *sql.DB
+	//only here to acess functions from the middleware
+	auth *middleware.AuthMiddleware
 }
 
-func New(db *sql.DB) *API {
-	return &API{
-		db: db,
-	}
+func New(db *sql.DB, cfg *config.AuthConfig) *API {
+	return &API{db: db, auth: middleware.NewAuthMiddleware(cfg, db)}
 }
 func (api *API) Get(w http.ResponseWriter, r *http.Request) {
+	//TODO: limit this to /users/me
 	rows, err := api.db.Query("SELECT * from reservation;")
 	w.Header().Add("Content-Type", "application/json")
 	if err != nil {
@@ -43,6 +47,24 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 		reservations = append(reservations, reservation)
 	}
 	json.NewEncoder(w).Encode(reservations)
+}
+
+func (api *API) Id(w http.ResponseWriter, r *http.Request) {
+	token, _ := api.auth.ParseToken(r.Header.Get("Authorization")) //This token was checked by Require
+	userId, _ := api.auth.GetIDFromToken(token)
+	reservationID := mux.Vars(r)["id"]
+	row := api.db.QueryRow("SELECT * FROM \"reservation\" WHERE id=$1", reservationID)
+	var reservation Reservation
+	err := row.Scan(&reservation.ID, reservation.UserID, reservation.CarID, reservation.StartDate, reservation.EndDate)
+	if err != nil {
+		util.JsonError(w, "{\"error\":\"Reservation doesn't exist\"}", http.StatusNotFound)
+		return
+	}
+	if reservation.UserID != userId && !api.auth.UserHasPerm(userId, "read:perms") {
+		util.JsonError(w, "{\"error\":\"Forbiden\"}", http.StatusForbidden)
+		return
+	}
+	json.NewEncoder(w).Encode(reservation)
 }
 
 func (api *API) Post(w http.ResponseWriter, r *http.Request) {
