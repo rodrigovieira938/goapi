@@ -81,7 +81,6 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 		car.Model, car.Brand, car.Year, car.Color, car.Doors, car.PricePerDay, car.LicensePlate, car.BaggageVolume)
 	err = row.Scan(&car.ID)
 	if err != nil {
-		//TODO: check for unique license plate violation
 		if pqErr, ok := err.(*pq.Error); ok {
 			if pqErr.Code == "23505" {
 				if pqErr.Constraint == "car_license_plate_key" {
