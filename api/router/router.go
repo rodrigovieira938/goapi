@@ -42,8 +42,8 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 	r.Handle("/users/{id}", authMiddleware.WithPerms(http.HandlerFunc(userAPI.Id), []string{"read:users"})).Methods("GET")
 	r.Handle("/users/{id}/permissions", authMiddleware.WithPerms(http.HandlerFunc(userAPI.PermsId), []string{"read:users"})).Methods("GET")
 	//Only has put since it ensures the user has permission(id == perm-id)
-	r.Handle("/users/{id}/permissions/{perm_id}", authMiddleware.WithPerms(http.HandlerFunc(userAPI.GrantPerm), []string{"read:users"})).Methods("PUT")
-	r.Handle("/users/{id}/permissions/{perm_id}", authMiddleware.WithPerms(http.HandlerFunc(userAPI.DeletePerm), []string{"read:users"})).Methods("DELETE")
+	r.Handle("/users/{id}/permissions/{perm_id}", authMiddleware.WithPerms(http.HandlerFunc(userAPI.GrantPerm), []string{"write:users"})).Methods("PUT")
+	r.Handle("/users/{id}/permissions/{perm_id}", authMiddleware.WithPerms(http.HandlerFunc(userAPI.DeletePerm), []string{"write:users"})).Methods("DELETE")
 
 	reservationAPI := reservations.New(db, &cfg.Auth)
 
