@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
+	"github.com/rodrigovieira938/goapi/api/resource/permissions"
 	"github.com/rodrigovieira938/goapi/api/router/middleware"
 	"github.com/rodrigovieira938/goapi/config"
 	"github.com/rodrigovieira938/goapi/util"
@@ -115,4 +116,67 @@ func (api *API) Id(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(map[string]any{"id": user.ID, "username": user.Username, "email": user.Email})
+}
+
+func (api *API) Perms(w http.ResponseWriter, r *http.Request) {
+	token, _ := api.auth.ParseToken(r.Header.Get("Authorization")) //This token was checked by Require
+	userId, _ := api.auth.GetIDFromToken(token)
+	rows, err := api.db.Query(`
+		SELECT p.id, p.name, p.description
+			FROM permission p
+			JOIN user_permission up ON p.id = up.permission_id
+			WHERE up.user_id = $1;
+	`, userId)
+	w.Header().Add("Content-Type", "application/json")
+	if err != nil {
+		if err == sql.ErrNoRows {
+			w.Write([]byte("[]"))
+			return
+		}
+		util.JsonError(w, "{\"error\":\"Internal Server Error\"}", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var perms []permissions.Permission = make([]permissions.Permission, 0)
+
+	for rows.Next() {
+		var perm permissions.Permission
+		if err := rows.Scan(&perm.ID, &perm.Name, &perm.Description); err != nil {
+			break
+		}
+		perms = append(perms, perm)
+	}
+	json.NewEncoder(w).Encode(perms)
+}
+
+func (api *API) PermsId(w http.ResponseWriter, r *http.Request) {
+	userId := mux.Vars(r)["id"]
+	rows, err := api.db.Query(`
+		SELECT p.id, p.name, p.description
+			FROM permission p
+			JOIN user_permission up ON p.id = up.permission_id
+			WHERE up.user_id = $1;
+	`, userId)
+	w.Header().Add("Content-Type", "application/json")
+	if err != nil {
+		if err == sql.ErrNoRows {
+			w.Write([]byte("[]"))
+			return
+		}
+		util.JsonError(w, "{\"error\":\"Internal Server Error\"}", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var perms []permissions.Permission = make([]permissions.Permission, 0)
+
+	for rows.Next() {
+		var perm permissions.Permission
+		if err := rows.Scan(&perm.ID, &perm.Name, &perm.Description); err != nil {
+			break
+		}
+		perms = append(perms, perm)
+	}
+	json.NewEncoder(w).Encode(perms)
 }
