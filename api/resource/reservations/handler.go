@@ -77,7 +77,7 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&reservation)
 	if err != nil {
-		util.JsonError(w, "{\"error\":\"Invalid JSON! Check if json is valid or if all required fields are present\"}", http.StatusBadRequest)
+		util.JsonError(w, "{\"error\":\"Invalid JSON!\"}", http.StatusBadRequest)
 		return
 	}
 	reservation.ID = 1 // Make id valid since its ignored

@@ -40,7 +40,7 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&loginInfo)
 	if err != nil {
-		util.JsonError(w, "{\"error\":\"Invalid JSON! Check if json is valid or if all required fields are present\"}", http.StatusBadRequest)
+		util.JsonError(w, "{\"error\":\"Invalid JSON!\"}", http.StatusBadRequest)
 		return
 	}
 	validate := validator.New(validator.WithRequiredStructEnabled())
