@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/mux"
 	"github.com/rodrigovieira938/goapi/util"
 )
 
@@ -42,6 +43,17 @@ func (api *API) Get(w http.ResponseWriter, r *http.Request) {
 		cars = append(cars, car)
 	}
 	json.NewEncoder(w).Encode(cars)
+}
+func (api *API) Id(w http.ResponseWriter, r *http.Request) {
+	carId := mux.Vars(r)["id"]
+	row := api.db.QueryRow("SELECT * FROM \"car\" WHERE id=$1", carId)
+	var car Car
+	err := row.Scan(&car.ID, &car.Model, &car.Brand, &car.Year, &car.Color, &car.Doors, &car.PricePerDay, &car.LicensePlate, &car.BaggageVolume)
+	if err != nil {
+		util.JsonError(w, "{\"error\":\"Car doesn't exist\"}", http.StatusNotFound)
+		return
+	}
+	json.NewEncoder(w).Encode(car)
 }
 func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != "application/json" {
