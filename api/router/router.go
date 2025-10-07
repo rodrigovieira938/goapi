@@ -26,6 +26,7 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 	carAPI := cars.New(db)
 	r.HandleFunc("/cars", carAPI.Get).Methods("GET")
 	r.HandleFunc("/cars/{id}", carAPI.Id).Methods("GET")
+	//Need write:cars
 	r.Handle("/cars", authMiddleware.WithPerms(http.HandlerFunc(carAPI.Post), []string{"write:cars"})).Methods("POST")
 	r.Handle("/cars/{id}", authMiddleware.WithPerms(http.HandlerFunc(carAPI.Put), []string{"write:cars"})).Methods("PUT")
 	r.Handle("/cars/{id}", authMiddleware.WithPerms(http.HandlerFunc(carAPI.Patch), []string{"write:cars"})).Methods("PATCH")
