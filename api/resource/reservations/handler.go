@@ -94,8 +94,7 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	row := api.db.QueryRow("INSERT into reservation (user_id, car_id, start_date, end_date) VALUES ($1, $2, $3, $4) RETURNING id", reservation.UserID, reservation.CarID, reservation.StartDate, reservation.EndDate)
 	err = row.Scan(&reservation.ID)
 	if err != nil {
-		//TODO: check for unique email and username
-		slog.Error("Error inserting car", "error", err)
+		slog.Error("Error inserting reservation", "error", err)
 		util.JsonError(w, "{\"error\":\"Internal Server Error\"}", http.StatusInternalServerError)
 		return
 	}
