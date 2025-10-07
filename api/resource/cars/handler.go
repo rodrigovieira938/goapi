@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	"github.com/rodrigovieira938/goapi/util"
 )
 
@@ -56,10 +57,6 @@ func (api *API) Id(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(car)
 }
 func (api *API) Post(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Content-Type") != "application/json" {
-		util.JsonError(w, "{\"error\":\"Content-Type must be application/json\"}", http.StatusBadRequest)
-		return
-	}
 	var car Car
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&car)
@@ -85,7 +82,18 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	err = row.Scan(&car.ID)
 	if err != nil {
 		//TODO: check for unique license plate violation
-		slog.Error("Error inserting car", "error", err)
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23505" {
+				if pqErr.Constraint == "car_license_plate_key" {
+					util.JsonError(w, "{\"error\":\"Car with the same license plate already exists\"}", http.StatusConflict)
+					return
+				} else {
+					slog.Error("TODO Handle unique constrait", "col", pqErr.Constraint)
+				}
+			}
+		} else {
+			slog.Error("Error inserting car", "error", err)
+		}
 		util.JsonError(w, "{\"error\":\"Internal Server Error\"}", http.StatusInternalServerError)
 		return
 	}

@@ -25,8 +25,8 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 	r.Use(middleware.JsonResponse)
 	carAPI := cars.New(db)
 	r.HandleFunc("/cars", carAPI.Get).Methods("GET")
+	r.Handle("/cars", authMiddleware.WithPerms(http.HandlerFunc(carAPI.Post), []string{"write:cars"})).Methods("POST")
 	r.HandleFunc("/cars/{id}", carAPI.Id).Methods("GET")
-	r.Handle("/cars", authMiddleware.WithPerms(http.HandlerFunc(carAPI.Get), []string{"write:cars"})).Methods("POST")
 
 	userAPI := users.New(db, &cfg.Auth)
 	r.Handle("/users", authMiddleware.Reject(http.HandlerFunc(userAPI.Post))).Methods("POST")
@@ -40,7 +40,7 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 	//Get reservations of /users/me
 	r.Handle("/reservations", authMiddleware.Require(http.HandlerFunc(reservationAPI.Get))).Methods("GET")
 	//Get reservations: if reservations is owned by user return; else demand read:perms
-	r.Handle("/reservations/{id}", authMiddleware.Require(http.HandlerFunc(reservationAPI.Id)))
+	r.Handle("/reservations/{id}", authMiddleware.Require(http.HandlerFunc(reservationAPI.Id))).Methods("GET")
 	//Need write:perms
 	r.Handle("/reservations", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Post), []string{"write:perms"})).Methods("POST")
 
