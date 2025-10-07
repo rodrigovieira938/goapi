@@ -24,8 +24,9 @@ func New(db *sql.DB, cfg *config.AuthConfig) *API {
 	return &API{db: db, auth: middleware.NewAuthMiddleware(cfg, db)}
 }
 func (api *API) Get(w http.ResponseWriter, r *http.Request) {
-	//TODO: limit this to /users/me
-	rows, err := api.db.Query("SELECT * from reservation;")
+	token, _ := api.auth.ParseToken(r.Header.Get("Authorization")) //This token was checked by Require
+	userId, _ := api.auth.GetIDFromToken(token)
+	rows, err := api.db.Query("SELECT * from reservation WHERE user_id = $1;", userId)
 	w.Header().Add("Content-Type", "application/json")
 	if err != nil {
 		if err == sql.ErrNoRows {
