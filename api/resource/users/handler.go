@@ -3,6 +3,7 @@ package users
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -179,4 +180,63 @@ func (api *API) PermsId(w http.ResponseWriter, r *http.Request) {
 		perms = append(perms, perm)
 	}
 	json.NewEncoder(w).Encode(perms)
+}
+
+func (api *API) exists(id string) bool {
+	var exists int
+	err := api.db.QueryRow(`
+        SELECT CASE WHEN EXISTS (
+            SELECT 1 FROM "user" WHERE id=$1
+        ) THEN 1 ELSE 0 END
+    `, id).Scan(&exists)
+	if err != nil {
+		fmt.Println(err)
+		// treat DB error as user not existing
+		return false
+	}
+	return exists == 1
+}
+func (api *API) permExists(id string) bool {
+	var exists int
+	err := api.db.QueryRow(`
+        SELECT CASE WHEN EXISTS (
+            SELECT 1 FROM permission WHERE id=$1
+        ) THEN 1 ELSE 0 END
+    `, id).Scan(&exists)
+	if err != nil {
+		// treat DB error as user not existing
+		return false
+	}
+	return exists == 1
+}
+
+func (api *API) GrantPerm(w http.ResponseWriter, r *http.Request) {
+	userId := mux.Vars(r)["id"]
+	permId := mux.Vars(r)["perm_id"]
+
+	if !api.exists(userId) || !api.permExists(permId) {
+		util.JsonError(w, "{\"error\":\"User Id and/or permission Id dont exist\"}", http.StatusBadRequest)
+		return
+	}
+	api.db.Exec(`INSERT INTO user_permission (user_id, permission_id)
+		VALUES ($1, $2)
+		ON CONFLICT (user_id, permission_id) DO NOTHING;
+	`, userId, permId)
+	fmt.Fprint(w, "{}")
+}
+
+func (api *API) DeletePerm(w http.ResponseWriter, r *http.Request) {
+	userId := mux.Vars(r)["id"]
+	permId := mux.Vars(r)["perm_id"]
+
+	if !api.exists(userId) || !api.permExists(permId) {
+		util.JsonError(w, "{\"error\":\"User Id and/or permission Id dont exist\"}", http.StatusBadRequest)
+		return
+	}
+
+	api.db.Exec(`DELETE FROM user_permission
+		WHERE user_id = $1
+  		AND permission_id = $2;
+	`, userId, permId)
+	fmt.Fprint(w, "{}")
 }
