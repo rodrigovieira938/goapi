@@ -20,7 +20,7 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 		fmt.Fprintf(w, "Hello, World!")
 	})
 
-	authMiddleware := middleware.NewAuthMiddleware(&cfg.Auth)
+	authMiddleware := middleware.NewAuthMiddleware(&cfg.Auth, db)
 
 	r.Use(middleware.JsonResponse)
 	carAPI := cars.New(db)

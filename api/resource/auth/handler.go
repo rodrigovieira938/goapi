@@ -25,7 +25,7 @@ func New(db *sql.DB, cfg *config.AuthConfig) *API {
 
 func createJWT(userID int, cfg *config.AuthConfig) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":  userID,
+		"sub": userID,
 		"exp": time.Now().Add(time.Hour * 24).Unix(), //TODO: get this time from AuthConfig
 	})
 	return token.SignedString([]byte(cfg.Secret))
