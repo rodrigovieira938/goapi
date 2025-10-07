@@ -47,6 +47,9 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 	r.Handle("/reservations/{id}", authMiddleware.Require(http.HandlerFunc(reservationAPI.Id))).Methods("GET")
 	//Need write:perms
 	r.Handle("/reservations", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Post), []string{"write:perms"})).Methods("POST")
+	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Put), []string{"write:perms"})).Methods("PUT")
+	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Patch), []string{"write:perms"})).Methods("PATCH")
+	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Delete), []string{"write:perms"})).Methods("DELETE")
 
 	authAPI := auth.New(db, &cfg.Auth)
 	r.HandleFunc("/auth/login", authAPI.Login).Methods("POST")
