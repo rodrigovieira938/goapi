@@ -102,8 +102,7 @@ func (api *API) Id(w http.ResponseWriter, r *http.Request) {
 	userId := mux.Vars(r)["id"]
 	row := api.db.QueryRow("SELECT * FROM \"user\" WHERE id=$1", userId)
 	if row == nil {
-		//Shouldn't happend
-		util.JsonError(w, "{\"error\":\"Internal Server Error\"}", http.StatusInternalServerError)
+		util.JsonError(w, "{\"error\":\"User doesn't exist\"}", http.StatusNotFound)
 		return
 	}
 	var user User
