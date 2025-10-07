@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	"github.com/rodrigovieira938/goapi/api/router/middleware"
 	"github.com/rodrigovieira938/goapi/config"
 	"github.com/rodrigovieira938/goapi/util"
@@ -75,8 +76,14 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	row := api.db.QueryRow(`INSERT INTO "user" (username, email, password) VALUES ($1, $2, $3) RETURNING id`, user.Username, user.Email, user.Password)
 	err = row.Scan(&user.ID)
 	if err != nil {
-		//TODO: check for unique email and username
-		slog.Error("Error inserting car", "error", err)
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23505" {
+				util.JsonError(w, "{\"error\":\"Email or username already in use!\"}", http.StatusConflict)
+				return
+			}
+		} else {
+			slog.Error("Error inserting car", "error", err)
+		}
 		util.JsonError(w, "{\"error\":\"Internal Server Error\"}", http.StatusInternalServerError)
 		return
 	}
