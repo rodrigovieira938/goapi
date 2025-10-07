@@ -39,6 +39,5 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 
 	authAPI := auth.New(db, &cfg.Auth)
 	r.HandleFunc("/auth/login", authAPI.Login).Methods("POST")
-	r.Handle("/auth/refresh", authMiddleware.Require(http.HandlerFunc(authAPI.Refresh))).Methods("POST")
 	return r
 }

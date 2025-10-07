@@ -73,7 +73,3 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(Response{token})
 }
-
-func (api *API) Refresh(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(Response{"TODO: Generate JWT"})
-}
