@@ -101,11 +101,11 @@ func (api *API) Me(w http.ResponseWriter, r *http.Request) {
 func (api *API) Id(w http.ResponseWriter, r *http.Request) {
 	userId := mux.Vars(r)["id"]
 	row := api.db.QueryRow("SELECT * FROM \"user\" WHERE id=$1", userId)
-	if row == nil {
+	var user User
+	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+	if err != nil {
 		util.JsonError(w, "{\"error\":\"User doesn't exist\"}", http.StatusNotFound)
 		return
 	}
-	var user User
-	row.Scan(&user.ID, &user.Username, &user.Email, &user.Password)
 	json.NewEncoder(w).Encode(map[string]any{"id": user.ID, "username": user.Username, "email": user.Email})
 }
