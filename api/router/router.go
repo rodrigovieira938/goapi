@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rodrigovieira938/goapi/api/resource/auth"
 	"github.com/rodrigovieira938/goapi/api/resource/cars"
+	"github.com/rodrigovieira938/goapi/api/resource/permissions"
 	"github.com/rodrigovieira938/goapi/api/resource/reservations"
 	"github.com/rodrigovieira938/goapi/api/resource/users"
 	"github.com/rodrigovieira938/goapi/api/router/middleware"
@@ -50,6 +51,11 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Put), []string{"write:reservations"})).Methods("PUT")
 	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Patch), []string{"write:reservations"})).Methods("PATCH")
 	r.Handle("/reservations/{id}", authMiddleware.WithPerms(http.HandlerFunc(reservationAPI.Delete), []string{"write:reservations"})).Methods("DELETE")
+
+	permissionAPI := permissions.New(db)
+
+	r.HandleFunc("/permissions", permissionAPI.Get).Methods("GET")
+	r.HandleFunc("/permissions/{id}", permissionAPI.Id).Methods("GET")
 
 	authAPI := auth.New(db, &cfg.Auth)
 	r.HandleFunc("/auth/login", authAPI.Login).Methods("POST")
