@@ -25,12 +25,12 @@ func NewAuthMiddleware(cfg *config.AuthConfig, db *sql.DB) *AuthMiddleware {
 	}
 }
 
-func (auth *AuthMiddleware) parseToken(tokenStr string) (*jwt.Token, error) {
+func (auth *AuthMiddleware) ParseToken(tokenStr string) (*jwt.Token, error) {
 	return jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return []byte(auth.cfg.Secret), nil
 	})
 }
-func (auth *AuthMiddleware) getIDFromToken(token *jwt.Token) (int, error) {
+func (auth *AuthMiddleware) GetIDFromToken(token *jwt.Token) (int, error) {
 	if !token.Valid {
 		return 0, errors.New("invalid token")
 	}
@@ -49,13 +49,13 @@ func (auth *AuthMiddleware) getIDFromToken(token *jwt.Token) (int, error) {
 }
 
 func (auth *AuthMiddleware) validToken(tokenStr string) error {
-	token, err := auth.parseToken(tokenStr)
+	token, err := auth.ParseToken(tokenStr)
 
 	if err != nil {
 		return err
 	}
 
-	if _, err := auth.getIDFromToken(token); err != nil {
+	if _, err := auth.GetIDFromToken(token); err != nil {
 		return err
 	}
 	return nil
@@ -63,8 +63,8 @@ func (auth *AuthMiddleware) validToken(tokenStr string) error {
 func (auth *AuthMiddleware) WithPerms(next http.Handler, perms []string) http.Handler {
 	return auth.Require(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			token, _ := auth.parseToken(r.Header.Get("Authorization")) //This token was checked by Require
-			id, _ := auth.getIDFromToken(token)
+			token, _ := auth.ParseToken(r.Header.Get("Authorization")) //This token was checked by Require
+			id, _ := auth.GetIDFromToken(token)
 
 			query := `
 				SELECT COUNT(DISTINCT p.name)

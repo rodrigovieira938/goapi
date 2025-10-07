@@ -27,9 +27,12 @@ func New(db *sql.DB, cfg *config.Config) *mux.Router {
 	r.HandleFunc("/cars", carAPI.Get).Methods("GET")
 	r.Handle("/cars", authMiddleware.WithPerms(http.HandlerFunc(carAPI.Get), []string{"write:cars"})).Methods("POST")
 
-	userAPI := users.New(db)
-	r.Handle("/users", authMiddleware.WithPerms(http.HandlerFunc(userAPI.Get), []string{"read:users"})).Methods("GET")
+	userAPI := users.New(db, &cfg.Auth)
 	r.Handle("/users", authMiddleware.Reject(http.HandlerFunc(userAPI.Post))).Methods("POST")
+	r.Handle("/users/me", authMiddleware.Require(http.HandlerFunc(userAPI.Me))).Methods("GET")
+	//Need read:users
+	r.Handle("/users", authMiddleware.WithPerms(http.HandlerFunc(userAPI.Get), []string{"read:users"})).Methods("GET")
+	r.Handle("/users/{id}", authMiddleware.WithPerms(http.HandlerFunc(userAPI.Id), []string{"read:users"})).Methods("GET")
 
 	reservationAPI := reservations.New(db)
 

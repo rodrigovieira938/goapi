@@ -7,15 +7,20 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/mux"
+	"github.com/rodrigovieira938/goapi/api/router/middleware"
+	"github.com/rodrigovieira938/goapi/config"
 	"github.com/rodrigovieira938/goapi/util"
 )
 
 type API struct {
 	db *sql.DB
+	//only here to acess functions from the middleware
+	auth *middleware.AuthMiddleware
 }
 
-func New(db *sql.DB) *API {
-	return &API{db: db}
+func New(db *sql.DB, cfg *config.AuthConfig) *API {
+	return &API{db: db, auth: middleware.NewAuthMiddleware(cfg, db)}
 }
 
 func (api *API) Get(w http.ResponseWriter, r *http.Request) {
@@ -78,4 +83,30 @@ func (api *API) Post(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Add("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
+}
+
+func (api *API) Me(w http.ResponseWriter, r *http.Request) {
+	token, _ := api.auth.ParseToken(r.Header.Get("Authorization")) //This token was checked by Require
+	id, _ := api.auth.GetIDFromToken(token)
+	row := api.db.QueryRow("SELECT * FROM \"user\" WHERE id=$1", id)
+	if row == nil {
+		//Shouldn't happend since AuthMiddleware.Require checked it
+		util.JsonError(w, "{\"error\":\"Internal Server Error\"}", http.StatusInternalServerError)
+		return
+	}
+	var user User
+	row.Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+	json.NewEncoder(w).Encode(map[string]any{"id": user.ID, "username": user.Username, "email": user.Email})
+}
+func (api *API) Id(w http.ResponseWriter, r *http.Request) {
+	userId := mux.Vars(r)["id"]
+	row := api.db.QueryRow("SELECT * FROM \"user\" WHERE id=$1", userId)
+	if row == nil {
+		//Shouldn't happend
+		util.JsonError(w, "{\"error\":\"Internal Server Error\"}", http.StatusInternalServerError)
+		return
+	}
+	var user User
+	row.Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+	json.NewEncoder(w).Encode(map[string]any{"id": user.ID, "username": user.Username, "email": user.Email})
 }
