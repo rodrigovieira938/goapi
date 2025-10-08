@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rodrigovieira938/goapi/api/resource/users"
 	"github.com/rodrigovieira938/goapi/config"
@@ -43,7 +42,7 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 		util.JsonError(w, "{\"error\":\"Invalid JSON!\"}", http.StatusBadRequest)
 		return
 	}
-	validate := validator.New(validator.WithRequiredStructEnabled())
+	/*validate := validator.New(validator.WithRequiredStructEnabled())
 	err = validate.Struct(loginInfo)
 	if err != nil {
 		validationErrors := err.(validator.ValidationErrors)
@@ -51,7 +50,7 @@ func (api *API) Login(w http.ResponseWriter, r *http.Request) {
 			util.JsonError(w, "{\"error\":\""+validationErrors.Error()+"\"}", http.StatusBadRequest)
 			return
 		}
-	}
+	}*/
 	row := db.GetUserByEmail(api.db, loginInfo.Email)
 	var user users.User
 	if err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password); err != nil {
